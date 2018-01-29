@@ -1,0 +1,150 @@
+
+from Tkinter import *
+import MySQLdb
+
+from Client import Client
+
+class dbConnection:
+    def __init__(self):
+        # Open database connection
+        self.db = MySQLdb.connect("localhost","root","","instagram")
+
+        # prepare a cursor object using cursor() method
+        self.cursor = self.db.cursor()
+
+    def insert(self, Name, Username, Password, Country, Mobile):
+
+
+        self.sql = """INSERT INTO SIGNUP(Id,Name,
+                    Username, Password, Country, Mobile)
+                    VALUES ('', '%s', '%s', '%s', '%s', '%s' )""" % \
+                    (Name, Username, Password, Country, Mobile)
+        try:
+            # Execute the SQL command
+            self.cursor.execute(self.sql)
+            # Commit your changes in the database
+            self.db.commit()
+            print "Success"
+        except:
+            # Rollback in case there is any error
+            self.db.rollback()
+            print "Did not work"
+
+        # disconnect from server
+        self.db.close()
+
+    def retrieve(self,Username,Password):
+        self.sql = "SELECT * FROM SIGNUP WHERE Username = '%s' and Password = '%s'" % (Username,Password)
+        try:
+            # Execute the SQL command
+            self.cursor.execute(self.sql)
+            # Fetch all the rows in a list of lists.
+            self.results = self.cursor.fetchall()
+            flag = 0
+
+            for row in self.results:
+                id = row[0]
+                name = row[1]
+                uname = row[2]
+                pname = row[3]
+                country = row[4]
+                mobile = row[5]
+                client = Client()
+                client.start()
+            if flag ==1:
+                self.sql = "SELECT * FROM '%d'" % (id)
+                # Execute the SQL command
+                self.cursor.execute(self.sql)
+                # Fetch all the rows in a list of lists.
+                self.results = self.cursor.fetchall()
+                friend_name = []
+                pictures = []
+                for row in self.results:
+                    friend_name.append(row[1])
+                for friend in friend_name:
+                    self.sql = "SELECT * FROM '%s'" % (friend)
+                    self.cursor.execute(self.sql)
+                    # Fetch all the rows in a list of lists.
+                    self.results = self.cursor.fetchall()
+                    for row in self.results:
+                        pictures.append(row[1])
+                print pictures
+                print "name=%s,uname=%s,pname=%s,country=%s,mobile=%s" % \
+                      (name, uname, pname, country, mobile)
+        except:
+            print "Error: unable to fetch data"
+
+        # disconnect from server
+        self.db.close()
+
+class Login:
+    def __init__(self,root):
+        #widgets
+        self.username = Label(root,text = "Username")
+        self.password = Label(root, text="Password")
+        self.user_entry = Entry(root)
+        self.pass_entry = Entry(root)
+        self.login = Button(root, text = "Login",command = self.Login_Event)
+
+        #position
+        self.username.grid(row = 0,column = 0)
+        self.password.grid(row =1,column = 0)
+        self.user_entry.grid(row=0, column=1)
+        self.pass_entry.grid(row=1, column=1)
+        self.login.grid(row =5, column = 1)
+        print "Inside positions"
+
+    def Login_Event(self):
+        dbconnection = dbConnection()
+        print "inside connections"
+        self.username_input = self.user_entry.get()
+        self.password_input = self.pass_entry.get()
+        dbconnection.retrieve(self.username_input, self.password_input)
+
+
+
+class SignUp:
+    def __init__(self,root):
+        #widgets
+        self.name = Label(root,text = "Name")
+        self.username = Label(root,text = "Username")
+        self.password = Label(root, text="Password")
+        self.country = Label(root, text="Country")
+        self.mobile = Label(root, text="Mobile")
+        self.name_entry = Entry(root)
+        self.user_entry = Entry(root)
+        self.pass_entry = Entry(root)
+        self.country_entry = Entry(root)
+        self.mobile_entry = Entry(root)
+        self.signup = Button(root, text = "Signup", command = self.Signup_Event)
+
+        #position
+        self.name.grid(row=0, column=0)
+        self.username.grid(row = 1, column = 0)
+        self.password.grid(row =2, column = 0)
+        self.country.grid(row=3, column=0)
+        self.mobile.grid(row=4, column=0)
+        self.name_entry.grid(row=0, column=1)
+        self.user_entry.grid(row=1, column=1)
+        self.pass_entry.grid(row=2, column=1)
+        self.country_entry.grid(row=3, column=1)
+        self.mobile_entry.grid(row=4, column=1)
+        self.signup.grid(row =5, column = 1)
+
+        #self.signup.bind('<Signup>',self.signup)
+
+    def Signup_Event(self):
+        dbconnection = dbConnection()
+        self.name_input = self.name_entry.get()
+        self.username_input = self.user_entry.get()
+        self.password_input = self.pass_entry.get()
+        self.country_input = self.country_entry.get()
+        self.mobile_input = self.mobile_entry.get()
+        dbconnection.insert(self.name_input,self.username_input,self.password_input,self.country_input,self.mobile_input)
+
+
+root = Tk()
+#root.geometry('300x500')
+#signup = SignUp(root)
+login = Login(root)
+root.mainloop()

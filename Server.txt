@@ -1,0 +1,61 @@
+import socket
+import thread
+import threading
+
+class ServerThread(threading.Thread):
+    def __init__(self,sockpy,sockets):
+        super(ServerThread,self).__init__()
+        self.sockpy = sockpy
+        self.sockets = sockets
+
+    def run(self):
+        while True:
+            message = self.sockpy.recv(1024)
+
+            for index, socketed in enumerate(self.sockets):
+                if socketed == self.sockpy:
+                    pass
+                    #message = "Client " + str(index) + " " + message
+            for socket in self.sockets:
+                if socket != self.sockpy:
+                    socket.send(message)
+
+
+class Server(threading.Thread):
+    def __init__(self):
+        super(Server,self).__init__()
+
+    def run(self):
+        sockpy = socket.socket()
+        host = 'localhost'
+        port = 12345
+        sockpy.bind((host,port))
+        sockpy.listen(5)
+        sockets = []
+
+        while True:
+            c, address = sockpy.accept()
+
+            sockets.append(c)
+
+            serverthread = ServerThread(c,sockets)
+            serverthread.start()
+        c.close()
+        sockpy.close()
+
+
+serverSocket = Server()
+serverSocket.start()
+
+
+
+
+
+
+
+
+
+
+
+
+
